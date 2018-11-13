@@ -16,6 +16,12 @@ public class Photo {
 	public static void main(String[] args){
 		run_ex_max_pairs(1);
 		run_ex_min_dist(1);
+
+		run_ex_max_pairs(2);
+		run_ex_min_dist(2);
+
+		//run_ex_max_pairs(3); // Slow computation
+		run_ex_min_dist(3);
 	}
 
 	public Photo(int n, int n_prefs, int[][] prefs, int out1, int out2){
@@ -52,23 +58,15 @@ public class Photo {
 			store.impose(new Distance(persons[prefs[i][0] - 1], persons[prefs[i][1] - 1], dist[i]));
 		}
 		
+		// Find max distance
 		IntVar max = new IntVar(store, "max", 1, n - 1);
-		store.impose(new ArgMax(dist, max)); //minimize the maximum distance
- 		//IntVar negMax = new IntVar(store, "negMax",-1 * n, 0);
-		//IntVar[] minimize = new IntVar[2];
-		//minimize[0] = max;
-		//minimize[1] = negMax;
-		//IntVar zero = new IntVar(store, "zero", 0, 0);
-		//PrimitiveConstraint pc = new SumInt(minimize, "==", zero);
-		//pc.impose(store);
-		
-		//System.out.println("Number of variables: " + store.size() + 
-		//		"\nNumber of constraints: " + store.numberConstraints());
+		store.impose(new Max(dist, max));
 	
 		// Specify select to optimize for preferences fullfilled
 		Search<IntVar> search = new DepthFirstSearch<IntVar>();
 		SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(persons, null , new IndomainMin<IntVar>());
 
+		// Minimize the max distance in result
 		boolean Result = search.labeling(store, select, max);
 		System.out.println("Solution: " + java.util.Arrays.asList(persons));
 	}
