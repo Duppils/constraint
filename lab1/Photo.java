@@ -7,14 +7,11 @@ public class Photo {
 	private int n_prefs;
 	private int[][] prefs;
 
+	// Each person has preferences for neighbors
+	// Find solution with most preferences satiated
+	// Modified problem:
+	// Minimize the distances between people on preference list.
 	public static void main(String[] args){
-		// Group of n people
-		// Each person has preferences for neighbors
-		// Find optimal placement of people
-		// Modified problem:
-		// Minimize the distances between people on prefernce list.
-		// i.e. minimize the maximal distance between two persons from the
-		// preference list. Compare solutions.
 		int out1 = 10;
 		int out2 = 4;
 		load_ex(1);
@@ -34,7 +31,6 @@ public class Photo {
 
 	public void solve(){
 		Store store = new Store();
-		
 		// Integrate the preference pairs into the program
 		IntVar[] pairs = new IntVar[n_prefs];
 		for(int i = 0; i < n_prefs; i++){
@@ -52,11 +48,13 @@ public class Photo {
 		store.impose(new Alldiff(persons));
 
 		// Calculate current distance between persons in preference pairs
-		// Neighbors have dist == abs(1)
+		// Neighbors have dist == abs(1), be careful, persons starts at 0,
+		// prefs start at 1.
 		IntVar[] dist = new IntVar[n_prefs]; 
 		for(int i = 0; i < n_prefs; i++){
-			store.impose(new Distance(persons[prefs[i][0]], persons[prefs[i][1]], dist[i]));
-			//store.impose(new Distance(pairs[i][0], pairs[i][1], dist[i]);
+			System.out.println("" + i);
+			dist[i] = new IntVar(store, "dist" + i, 1, n-1);
+			store.impose(new Distance(persons[prefs[i][0] - 1], persons[prefs[i][1] - 1], dist[i]));
 		}
 
 		// Creates a constraint which defines a neighbor and imposes it on the
@@ -64,6 +62,7 @@ public class Photo {
 		PrimitiveConstraint c;
 		IntVar[] neighbors = new IntVar[n_prefs];
 		for(int i = 0; i < n_prefs; i++){
+			neighbors[i] = new IntVar(store, "neighbor" + i, 0, 1);
 			c = new XeqC(dist[i], 1);
 			store.impose(new Reified(c, neighbors[i]));
 		}
@@ -80,7 +79,12 @@ public class Photo {
 		//boolean result = search.labeling(store, select);
 		System.out.println("Solution: " + java.util.Arrays.asList(persons));
 	}
-
+	
+	/* Loads the input variables for a given example from the lab.
+	 * n: number of persons
+	 * n_prefs: number of preference pairs
+	 * prefs: 2 * n_prefs matrix with preference pairs
+	 */
 	private static void load_ex(int i){
 		switch(i){
 			case 1:
