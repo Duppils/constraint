@@ -15,6 +15,7 @@ public class Photo {
 	// Minimize the distances between people on preference list.
 	public static void main(String[] args){
 		run_ex_max_pairs(1);
+		run_ex_min_dist(1);
 	}
 
 	public Photo(int n, int n_prefs, int[][] prefs, int out1, int out2){
@@ -30,7 +31,7 @@ public class Photo {
 		// Integrate the preference pairs into the program
 		IntVar[] pairs = new IntVar[n_prefs];
 		for(int i = 0; i < n_prefs; i++){
-			pairs[i] = new IntVar(store, "pref" + i, prefs[i][0], prefs[i][0]);			
+			pairs[i] = new IntVar(store, "pref" + (i + 1), prefs[i][0], prefs[i][0]);			
 			pairs[i].addDom(new IntervalDomain(prefs[i][1], prefs[i][1]));
 		}
 
@@ -38,7 +39,7 @@ public class Photo {
 		// Impose each position in photo can have one person
 		IntVar[] persons = new IntVar[n];
 		for(int i = 0; i < n; i++){
-			persons[i] = new IntVar(store, "" + i, 0, n-1);
+			persons[i] = new IntVar(store, "" + (i + 1), 1, n);
 		}
 		store.impose(new Alldiff(persons));
 
@@ -50,28 +51,17 @@ public class Photo {
 			dist[i] = new IntVar(store, "dist" + i, 1, n-1);
 			store.impose(new Distance(persons[prefs[i][0] - 1], persons[prefs[i][1] - 1], dist[i]));
 		}
-
-		// Creates a constraint which defines a neighbor and imposes it on the
-		// distance list.  
-		PrimitiveConstraint c;
-		IntVar[] neighbors = new IntVar[n_prefs];
-		for(int i = 0; i < n_prefs; i++){
-			neighbors[i] = new IntVar(store, "neighbor" + i, 0, 1);
-			c = new XeqC(dist[i], 1);
-			store.impose(new Reified(c, neighbors[i]));
-		}
-
-		// Defines sum as the number of fullfilled preferences
-		IntVar sum = new IntVar(store, "sum", 0, Integer.MAX_VALUE);
-		store.impose(new SumInt(neighbors, "==", sum));
-		IntVar negatedSum = new IntVar(store, "negatedSum", n_prefs * -1, 0);
-		IntVar[] minimize = new IntVar[2];
-		minimize[0] = sum;
-		minimize[1] = negatedSum;
-		IntVar zero = new IntVar(store, "zero", 0, 0);
-		PrimitiveConstraint pc = new SumInt(minimize, "==", zero);
-		pc.impose(store);
-
+		
+		IntVar max = new IntVar(store, "max", 1, n - 1);
+		store.impose(new ArgMax(dist, max)); //minimize the maximum distance
+ 		//IntVar negMax = new IntVar(store, "negMax",-1 * n, 0);
+		//IntVar[] minimize = new IntVar[2];
+		//minimize[0] = max;
+		//minimize[1] = negMax;
+		//IntVar zero = new IntVar(store, "zero", 0, 0);
+		//PrimitiveConstraint pc = new SumInt(minimize, "==", zero);
+		//pc.impose(store);
+		
 		//System.out.println("Number of variables: " + store.size() + 
 		//		"\nNumber of constraints: " + store.numberConstraints());
 	
@@ -79,7 +69,7 @@ public class Photo {
 		Search<IntVar> search = new DepthFirstSearch<IntVar>();
 		SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(persons, null , new IndomainMin<IntVar>());
 
-		boolean Result = search.labeling(store, select, negatedSum);
+		boolean Result = search.labeling(store, select, max);
 		System.out.println("Solution: " + java.util.Arrays.asList(persons));
 	}
 
@@ -96,7 +86,7 @@ public class Photo {
 		// Impose each position in photo can have one person
 		IntVar[] persons = new IntVar[n];
 		for(int i = 0; i < n; i++){
-			persons[i] = new IntVar(store, "" + i, 0, n-1);
+			persons[i] = new IntVar(store, "" + (i+1), 1, n);
 		}
 		store.impose(new Alldiff(persons));
 
