@@ -8,16 +8,13 @@ public class Photo {
 	private int[][] prefs;
 
 	public static void main(String[] args){
-		//TODO
 		// Group of n people
 		// Each person has preferences for neighbors
 		// Find optimal placement of people
-		//
 		// Modified problem:
 		// Minimize the distances between people on prefernce list.
 		// i.e. minimize the maximal distance between two persons from the
 		// preference list. Compare solutions.
-		
 		int out1 = 10;
 		int out2 = 4;
 		load_ex(1);
@@ -36,25 +33,43 @@ public class Photo {
 	}
 
 	public void solve(){
-		int[] dist = new int[n_prefs];
 		Store store = new Store();
+		
+		// Integrate the preference pairs into the program
+		IntVar[] pairs = new IntVar[n_prefs];
+		for(int i = 0; i < n_prefs; i++){
+			pairs[i] = new IntVar(store, "pref" + i, prefs[i][0], prefs[i][0]);			
+			pairs[i].addDom(new IntervalDomain(prefs[i][1], prefs[i][1]));
+		}
+
+		// Create our persons who will parttake in the photo
+		// Impose each position in photo can have one person
 		IntVar[] persons = new IntVar[n];
 		IntVar sum = new IntVar(store, "sum", 0, Integer.MAX_VALUE);
 		for(int i = 0; i < n; i++){
-			persons[i] = new IntVar(store, "" + i, 0, n-1); //each person is unique
+			persons[i] = new IntVar(store, "" + i, 0, n-1);
 		}
-		store.impose(new Alldiff(persons)); //each position on the photo can only have one person
+		store.impose(new Alldiff(persons));
 
-		//calculate current number of prefs achieved
-		//do this by calculating neighbors with dist == 1
-		
-		IntVar[] p = new IntVar[n_prefs]; 
-		for(int i = 0; i < n_prefs; i++)
-			p[i] = new IntVar(store, "", 0, 1);
+		// Calculate current distance between persons in preference pairs
+		// Neighbors have dist == abs(1)
+		IntVar[] dist = new IntVar[n_prefs]; 
+		for(int i = 0; i < n_prefs; i++){
+			store.impose(new Distance(persons[prefs[i][0]], persons[prefs[i][1]], dist[i]));
+			//store.impose(new Distance(pairs[i][0], pairs[i][1], dist[i]);
+		}
 
-		//defines sum as the number of fullfilled preferences and maximizes
-		//this variable
-		store.impose(new SumInt(p, "==", sum));
+		// Creates a constraint which defines a neighbor and imposes it on the
+		// distance list.  
+		PrimitiveConstraint c;
+		IntVar[] neighbors = new IntVar[n_prefs];
+		for(int i = 0; i < n_prefs; i++){
+			c = new XeqC(dist[i], 1);
+			store.impose(new Reified(c, neighbors[i]));
+		}
+
+		// Defines sum as the number of fullfilled preferences
+		store.impose(new SumInt(neighbors, "==", sum));
 
 		System.out.println("Number of variables: " + store.size() + 
 				"\nNumber of constraints: " + store.numberConstraints());
