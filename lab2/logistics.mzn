@@ -1,4 +1,7 @@
 %%%%%%%%LOGISTICS%%%%%%%%%
+%include "minizinc.org";
+include "globals.mzn";
+
 
 %%READ INPUT DATA%%
 int: graph_size;
@@ -10,55 +13,33 @@ array[1..n_dests] of int: dest;
 array[1..n_edges] of int: from;
 array[1..n_edges] of int: to;
 array[1..n_edges] of int: cost; 
+array[1..2*n_edges] of int: costs;
+costs = cost ++ cost;
 
-%%CREATE SOLUTION ARRAY%%
-%each element has index of edge
-array[1..n_edges, 1..2] of var 1..graph_size: my_edges; 
-set of int: edges = 1..n_edges;
-var set of edges: route;
+%edges, undirected:
+array[1..4*n_edges] of int: arcs1d;
+array[1..2*n_edges, 1..2] of int: arcs;
+array[1..2*n_edges] of int: arcsl;
+array[1..2*n_edges] of int: arcsr;
+arcsl = [if j = 1 then from[i] else to[i] endif| i in 1..n_edges, j in 1..2];
+arcsr =[if j = 1 then to[i] else from[i] endif | i in 1..n_edges, j in 1..2];
+arcs1d = arcsl ++ arcsr;
+arcs = array2d(1..2*n_edges, 1..2, arcs1d);
 
-%sol[i] = j specifies from node i to node j is the path taken
-array[1..graph_size] of var 1..graph_size: sol;
+%for each node, find difference between in and out flow:
+%all nodes except start and dests have flow 0 (undirected graph)
+%for start and dests, flow = n_dests or -n_dests
+array[1..graph_size] of int: balance;
 
-%%TRANSITION MATRIX%%
-%array[graph_size, graph_size] of int: trans; %not sure if useful yet..
+%dests have flow -n_dest, might be -1
+balance = [if i = start then n_dests else if has_element(i, dest) then -1 else 0 endif endif | i in 1..graph_size]; 
 
-%stops is a subset of the bigger graph of nodes
-set of int: graph = 1..graph_size;
-var set of graph: stops;
+array[1..2*n_edges] of var int: path;
+constraint network_flow(arcs, balance, path);
+%constraint network_flow(arcs, balance, cost, path, tot_cost);
 
-var set of graph: required;
-constraint start in required;
-constraint forall(i in dest)(i in stops);
-% n_dests + 1 of the values in required must be present in solution, in this
-% case, all destinations + start must be part of solution
-%constraint among(n_dests + 1, sol, required);
-
-%%CONSTRAINTS%%
-%must start in start node
-
-%all edges must have both to and from nodes as part of route
-%constraint forall(i in route)(to[i] in stops /\ from[i] in stops);
-
-%array[1..n_edges] of var 1..1: balance;
-%constraint network_flow(my_edges, balance, cost);
-
-constraint subcircuit(sol);
-%constraint forall(i in dest)(has_element(i, sol));
-%constraint has_element(start, sol);
-
-%all edges must be connected
-%constraint forall(i in col(edges, 1))(my_edges[i,2] = my_edges[i+1, 1]);
-%constraint forall(i in stops)(to[i]
-%constraint alldifferent(row(my_edges, 1));
-
-%all edges must connect to another edge
-%all nodes in stops must be connected
-%constraint forall(i in stops) forall(x in route)(x in to[x] or x in from[x]);
-
-%require the stops to contain start and all destinations
-%constraint forall(i in dest)(has_element(i, my_edges)); %for array route
-constraint forall(i in dest)(i in stops);
-constraint start in stops;
-
-solve minimize sum (i in route)(cost[i]);
+%var int: total = sum (i in path)(costs[i] * path[i]);
+var int: total = sum (i in path)(i > 0)*costs[i];
+%var int: total = sum (i in path)(costs[i]);
+solve minimize total;
+output[show(total)];
