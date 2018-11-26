@@ -232,6 +232,41 @@ public class SimpleDFS  {
 	}
 
 	/**
+	 * Selects the middle of the domain interval
+	 */
+	int selectValueCenter(IntVar v){
+		return c = (v.max() + v.min())/2;
+	}
+
+	/**
+	 * Constraint limits the domain of var to the lower half
+	 */
+	public PrimitiveConstraint getConstraintLower() {
+		return new XltC(var, value);
+	}
+
+	/**
+	 * Constraint limits the domain of var to the lower half and center
+	 */
+	public PrimitiveConstraint getConstraintLowerEq() {
+		return new XlteqC(var, value);
+	}
+	
+	/**
+	 * Constraint limits the domain of var to the upper half
+	 */
+	public PrimitiveConstraint getConstraintUpper() {
+		return new XgtC(var, value);
+	}
+	
+	/**
+	 * Constraint limits the domain of var to the upper half and center
+	 */
+	public PrimitiveConstraint getConstraintUpperEq() {
+		return new XgteqC(var, value);
+	}
+
+	/**
 	 * example constraint assigning a selected value
 	 */
 	public PrimitiveConstraint getConstraint() {
