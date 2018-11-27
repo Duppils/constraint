@@ -83,6 +83,8 @@ public class SimpleDFS  {
 
 	public SimpleDFS(Store s, int selection) {
 		store = s;
+		visited = 0;
+		mistakes = 0;
 		this.selection = selection;
 		if (selection > 3 || selection < 0){
 			this.selection = 0;
@@ -124,7 +126,6 @@ public class SimpleDFS  {
 
 		if (!consistent) {
 			// Failed leaf of the search tree
-			//System.out.println("failed leaf");
 			return false;
 		} else { // consistent
 
@@ -168,7 +169,7 @@ public class SimpleDFS  {
 				if (consistent) {
 					return true;
 				} else {
-					//no solution found, not consistent -> search failed
+					//no solution found, not consistent
 					mistakes++;
 					return false;
 				}
@@ -230,6 +231,7 @@ public class SimpleDFS  {
 			switch(selection){
 				case INPUT_ORDER: return selectVariableInputOrder(v);
 				case MIN_DOMAIN: return selectVariableMinDom(v);
+				case MAX_DOMAIN: return selectVariableMinDom(v);
 				default: return selectVariableInputOrder(v);
 			}
 		}
@@ -241,7 +243,7 @@ public class SimpleDFS  {
 			switch(selection){
 				case INPUT_ORDER: return v.min();
 				case MIN_DOMAIN: return (v.max() + v.min())/2;
-				case MAX_DOMAIN: return (v.max() + v.min())/2;
+				case MAX_DOMAIN: return (int) Math.ceil((double)(v.max() + v.min())/2.0);
 				default: return v.min();
 			}
 		}
