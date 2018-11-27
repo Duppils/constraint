@@ -296,7 +296,6 @@ public class SimpleDFS  {
 
 				//check if smallest domain is single value
 				if (minDom == 1){
-					if(trace) System.out.println("len: " + v.length + " pos: " + pos);
 					searchVariables = new IntVar[v.length-1];
 					//remove var and save remaining of vars
 					for(int i = 0; i < v.length-1; i++){
