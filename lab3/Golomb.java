@@ -95,9 +95,12 @@ public class Golomb {
 	public static void main(String args[]) {
 		Golomb example = new Golomb();
 		//run all search types
+		System.out.println("-------------INPUT ORDER----------------");
 		example.model(0);
-		System.out.println("-----------------------------");
+		System.out.println("-------------MIN DOMAIN----------------");
 		example.model(1);
+		System.out.println("-------------MAX DOMAIN----------------");
+		example.model(2);
 
 	}			
 
