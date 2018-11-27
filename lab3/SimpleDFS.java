@@ -230,8 +230,8 @@ public class SimpleDFS  {
 		IntVar selectVariable(IntVar[] v){
 			switch(selection){
 				case INPUT_ORDER: return selectVariableInputOrder(v);
-				case MIN_DOMAIN: return selectVariableMinDom(v);
-				case MAX_DOMAIN: return selectVariableMinDom(v);
+				case MIN_DOMAIN: return selectVariableMinDom2(v);
+				case MAX_DOMAIN: return selectVariableMinDom2(v);
 				default: return selectVariableInputOrder(v);
 			}
 		}
@@ -278,7 +278,8 @@ public class SimpleDFS  {
 		}
 
 		/**
-		 *  variable selection: min domain order
+		 *  variable selection: min domain order, not intended solution,
+		 *  deprecated method--
 		 */ 
 		IntVar selectVariableMinDom(IntVar[] v) {
 			if (v.length != 0) {
@@ -310,6 +311,40 @@ public class SimpleDFS  {
 					for(int i = 0; i < v.length; i++) searchVariables[i] = v[i];
 				}
 				return v[pos];
+			} else {
+				System.err.println("Zero length list of variables for labeling");
+				return new IntVar(store);
+			}
+		}
+		/**
+		 *  variable selection: min domain with input order
+		 */ 
+		IntVar selectVariableMinDom2(IntVar[] v) {
+			//if only one variable, there is only one choice
+			if (v.length == 1){
+				searchVariables = new IntVar[0];
+				return v[0];
+			}
+			if (v.length != 0) {
+				int minDom = Integer.MAX_VALUE;
+				//check for singular domain
+				for (int i = 0; i < v.length; i++) {
+					if(v[i].domain.getSize() == 1){
+						searchVariables = new IntVar[v.length-1];
+						//remove singular var and save remaining of vars
+						for(int j = 0; j < v.length-1; j++){
+							if (j < i){
+								searchVariables[j] = v[j];
+							} else {
+								searchVariables[j] = v[j+1];
+							}
+						}
+						return v[0];
+					}
+				}
+				searchVariables = new IntVar[v.length];
+				for(int i = 0; i < v.length; i++) searchVariables[i] = v[i];
+				return searchVariables[0];
 			} else {
 				System.err.println("Zero length list of variables for labeling");
 				return new IntVar(store);
