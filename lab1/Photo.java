@@ -14,13 +14,13 @@ public class Photo {
 	// Modified problem:
 	// Minimize the distances between people on preference list.
 	public static void main(String[] args){
-		run_ex_max_pairs(1);
-		run_ex_min_dist(1);
+		//run_ex_max_pairs(1);
+		//run_ex_min_dist(1);
+		
+		//run_ex_max_pairs(2);
+		//run_ex_min_dist(2);
 
-		run_ex_max_pairs(2);
-		run_ex_min_dist(2);
-
-		//run_ex_max_pairs(3); // Slow computation
+		run_ex_max_pairs(3); //unreasonably slow
 		run_ex_min_dist(3);
 	}
 
@@ -54,7 +54,7 @@ public class Photo {
 		// prefs start at 1.
 		IntVar[] dist = new IntVar[n_prefs]; 
 		for(int i = 0; i < n_prefs; i++){
-			dist[i] = new IntVar(store, "dist" + i, 1, n-1);
+			dist[i] = new IntVar(store, "dist" + i, 1, n - 1);
 			store.impose(new Distance(persons[prefs[i][0] - 1], persons[prefs[i][1] - 1], dist[i]));
 		}
 		
@@ -74,11 +74,11 @@ public class Photo {
 	public void max_pairs(){
 		Store store = new Store();
 		// Integrate the preference pairs into the program
-		IntVar[] pairs = new IntVar[n_prefs];
-		for(int i = 0; i < n_prefs; i++){
-			pairs[i] = new IntVar(store, "pref" + i, prefs[i][0], prefs[i][0]);			
-			pairs[i].addDom(new IntervalDomain(prefs[i][1], prefs[i][1]));
-		}
+		//IntVar[] pairs = new IntVar[n_prefs];
+		//for(int i = 0; i < n_prefs; i++){
+		//	pairs[i] = new IntVar(store, "pref" + i, prefs[i][0], prefs[i][0]);			
+		//	pairs[i].addDom(new IntervalDomain(prefs[i][1], prefs[i][1]));
+		//}
 
 		// Create our persons who will parttake in the photo
 		// Impose each position in photo can have one person
@@ -93,7 +93,7 @@ public class Photo {
 		// prefs start at 1.
 		IntVar[] dist = new IntVar[n_prefs]; 
 		for(int i = 0; i < n_prefs; i++){
-			dist[i] = new IntVar(store, "dist" + i, 1, n-1);
+			dist[i] = new IntVar(store, "dist" + i, 1, n - 1);
 			store.impose(new Distance(persons[prefs[i][0] - 1], persons[prefs[i][1] - 1], dist[i]));
 		}
 
@@ -123,7 +123,7 @@ public class Photo {
 	
 		// Specify select to optimize for preferences fullfilled
 		Search<IntVar> search = new DepthFirstSearch<IntVar>();
-		SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(persons, null , new IndomainMin<IntVar>());
+		SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(persons, new MostConstrainedDynamic() , new IndomainMin<IntVar>());
 
 		boolean Result = search.labeling(store, select, negatedSum);
 		System.out.println("Solution: " + java.util.Arrays.asList(persons));
