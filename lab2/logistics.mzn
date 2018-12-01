@@ -1,7 +1,6 @@
 %%%%%%%%LOGISTICS%%%%%%%%%
 include "globals.mzn";
 
-
 %%READ INPUT DATA%%
 int: graph_size;
 int: start;
@@ -20,18 +19,13 @@ array[1..2*n_edges] of int: arcsl = [if j = 1 then from[i] else to[i] endif| i i
 array[1..2*n_edges] of int: arcsr = [if j = 1 then to[i] else from[i] endif | i in 1..n_edges, j in 1..2];
 arcs = array2d(1..2*n_edges, 1..2, arcsl ++ arcsr);
 
-%verifies that my list comprehension works
-%arcs = [|1,2|1,3|2,3|2,4|3,5|4,5|4,6|2,1|3,1|3,2|4,2|5,3|5,4|6,4|];
-
 %all nodes except start and dests have flow 0 (undirected graph)
 array[1..graph_size] of int: balance = [ if i = start then
 n_dests else if has_element(i, dest) then -1 else 0 endif endif | i in 1..graph_size]; 
 
-array[1..2*n_edges] of var 0..2: path;
+array[1..2*n_edges] of var 0..10: path; %10 is arbitrary max value
 constraint network_flow(arcs, balance, path);
 
-%requires bool2int(i > 0) in previous ver of minizinc
-var int: total;% = sum (i in path)((path[i] > 0)*costs[i]);
-%var int: total = sum (i in path)(costs[i]);
+var int: total = sum (i in 1..2*n_edges)((path[i] > 0)*costs[i]);
 solve minimize total;
 output["total = \(total)\n path = \(path)\n"];
