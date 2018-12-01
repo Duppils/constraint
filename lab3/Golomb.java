@@ -99,8 +99,8 @@ public class Golomb {
 		example.model(0);
 		System.out.println("-------------MIN DOMAIN----------------");
 		example.model(1);
-		//System.out.println("-------------MAX DOMAIN----------------");
-		//example.model(2);
+		System.out.println("-------------MAX DOMAIN----------------");
+		example.model(2);
 	}			
 
 	public void model(int selection) {
