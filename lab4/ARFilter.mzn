@@ -1,8 +1,5 @@
 %%%%%AUTO REGRESSION FILTER%%%%%
 include "globals.mzn";
-
-%REMEMBER TO ASK ABOUT RELEVANCE OF SYMMETRY BREAKING
-
 % clock cycle cost per task(operation)
 int: del_add;
 int: del_mul;
@@ -45,8 +42,8 @@ constraint forall (i in 1..length(add))(s[add[i]] = sa[i]);
 constraint forall (i in 1..length(mul))(s[mul[i]] = sm[i]);
 
 % if ti dependent on tj then tj must precede ti
-constraint forall (i in add, dep in dependencies[i])(s[dep] + del_add <= s[i]);
-constraint forall (i in mul, dep in dependencies[i])(s[dep] + del_mul <= s[i]);
+constraint forall (i in add, dep in dependencies[i])(if dep in mul then s[dep] + del_mul <= s[i] else s[dep] + del_add <= s[i] endif);
+constraint forall (i in mul, dep in dependencies[i])(if dep in mul then s[dep] + del_mul <= s[i] else s[dep] + del_add <= s[i] endif);
 
 clock_cycles = clock_cycles_add + clock_cycles_mul; % total clock cycles, might be useless
 % all tasks must be completed in <= total clock cycles used
