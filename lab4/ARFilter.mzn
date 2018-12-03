@@ -1,5 +1,8 @@
 %%%%%AUTO REGRESSION FILTER%%%%%
 include "globals.mzn";
+
+%REMEMBER TO ASK ABOUT RELEVANCE OF SYMMETRY BREAKING
+
 % clock cycle cost per task(operation)
 int: del_add;
 int: del_mul;
@@ -29,7 +32,7 @@ array[1..length(mul)] of int: dym = [1 | i in 1..length(mul)];
 array[1..length(add)] of int: da = [del_add | i in 1..length(add)];
 array[1..length(mul)] of int: dm = [del_mul | i in 1..length(mul)];
 
-% diffn constrains all blocks: defined by the start koordinate (s, p) and dimensions (dx ,dy)
+% diffn constrains all blocks: defined by the start koordinate (s, p) and dimensions (dx ,dy), enforces nooverlap constraints
 % enforces no overlap
 constraint diffn(sa, pa, da, dya);
 constraint diffn(sm, pm, dm, dym);
