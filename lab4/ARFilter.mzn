@@ -1,26 +1,53 @@
+%%%%%AUTO REGRESSION FILTER%%%%%
+include "globals.mzn";
 % clock cycle cost per task(operation)
-int : del_add;
-int : del_mul;
+int: del_add;
+int: del_mul;
 % number of processors of each task type
-int : number_add;
-int : number_mul;
-int : n; % number of tasks
-set of int : last; % last task completed -> all tasks are finished
-set of int : add; % add operations(tasks)
-set of int : mul; % mul operations
-% task dependencies | si is start time - di completion time | for task i,
-% calculate dependency times: if sj dependant on si: si + di <= sj
+int: number_add;
+int: number_mul;
+int: n_proc = number_add + number_mul;
+int: n;
+set of int: last;
+set of int: add;
+set of int: mul;
 array[1..n] of set of int : dependencies;
-int var: clock_cycles; % clock cycles for scheduled tasks
+var 0..(number_add + number_mul) * n: clock_cycles;
 
-% constraint cumulative(array[int] of var (opt -is optional) 
-% int: s, array[int] of var int: d, array[int] of var int: r, var int: clock_cycles) % r: resource req for task i
+% s = start times | d = durations | r = resource requirements | clock_cycles = resource bound
+array[1..n] of var 0..200: s;
+array[1..length(add)] of var 0..100: sa;
+array[1..length(mul)] of var 0..100: sm;
+var 0..n * del_add: clock_cycles_add;
+var 0..n * del_mul: clock_cycles_mul;
+array[1..length(add)] of var 1..number_add: pa;
+array[1..length(mul)] of var 1..number_mul: pm;
+array[1..length(add)] of int: ra = [1 | i in 1..length(add)];
+array[1..length(mul)] of int: rm = [1 | i in 1..length(mul)];
+array[1..length(add)] of int: dya = [1 | i in 1..length(add)];
+array[1..length(mul)] of int: dym = [1 | i in 1..length(mul)];
+array[1..length(add)] of int: da = [del_add | i in 1..length(add)];
+array[1..length(mul)] of int: dm = [del_mul | i in 1..length(mul)];
 
-% constraint diffn(array[int] of var int: x,y,dx,dy)
-% x: start time of task(operation)
-% y: operation processor used, either add processor or mul processor
-% if more than one processor of same type, use processor (1..n_processors) FDV
-% dx: always del_add or del_mul, this is the clock cycles to complete operation
-% dy: should probably always be 0, an operation should never cost both add and mul processing
+% diffn constrains all blocks: defined by the start koordinate (s, p) and dimensions (dx ,dy)
+% enforces no overlap
+constraint diffn(sa, pa, da, dya);
+constraint diffn(sm, pm, dm, dym);
 
-% output: clock_cycles, runtime(s), optimal(boolean)
+constraint cumulative(sa, da, ra, clock_cycles_add);
+constraint cumulative(sm, dm, rm, clock_cycles_mul);
+
+% s FDVs match sa / sm
+constraint forall (i in 1..length(add))(s[add[i]] = sa[i]);
+constraint forall (i in 1..length(mul))(s[mul[i]] = sm[i]);
+
+% if ti dependent on tj then tj must precede ti
+constraint forall (i in add, dep in dependencies[i])(s[dep] + del_add <= s[i]);
+constraint forall (i in mul, dep in dependencies[i])(s[dep] + del_mul <= s[i]);
+
+clock_cycles = clock_cycles_add + clock_cycles_mul; % total clock cycles, might be useless
+% all tasks must be completed in <= total clock cycles used
+constraint forall (i in sa)(i + del_add <= clock_cycles);
+constraint forall (i in sm)(i + del_mul <= clock_cycles);
+solve minimize clock_cycles;
+output["clock cycles = \(clock_cycles)\nschedule adds = \(sa)\nschedule muls = \(sm)\nschedule = \(s)\n"];% runtime = s seconds\n optimal = T/F"];
