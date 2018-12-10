@@ -1,0 +1,4 @@
+output ["total = "++format(total)++"\n path = "++format(path)++"\n"];
+int: n_edges = 7;
+array [1..2*n_edges] of int: path;
+int: total;

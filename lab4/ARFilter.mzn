@@ -1,5 +1,6 @@
 %%%%%AUTO REGRESSION FILTER%%%%%
 include "globals.mzn";
+include "jacop.mzn";
 % clock cycle cost per task(operation)
 int: del_add;
 int: del_mul;
@@ -20,8 +21,11 @@ array[1..length(add)] of var 0..100: sa;
 array[1..length(mul)] of var 0..100: sm;
 var 0..n * del_add: clock_cycles_add;
 var 0..n * del_mul: clock_cycles_mul;
-array[1..length(add)] of var 1..number_add: pa;
-array[1..length(mul)] of var 1..number_mul: pm;
+array[1..n] of var int: p;
+array[1..card(add)] of var 1..number_add: pa = [p[i] | i in add];
+array[1..card(mul)] of var 1..number_mul: pm = [p[i] | i in mul];
+array[1..n] of 0..del_add + del_mul: delay = [if i in add then del_add else
+del_mul endif| i in 1..n];
 array[1..length(add)] of int: ra = [1 | i in 1..length(add)];
 array[1..length(mul)] of int: rm = [1 | i in 1..length(mul)];
 array[1..length(add)] of int: dya = [1 | i in 1..length(add)];
@@ -42,12 +46,14 @@ constraint forall (i in 1..length(add))(s[add[i]] = sa[i]);
 constraint forall (i in 1..length(mul))(s[mul[i]] = sm[i]);
 
 % if ti dependent on tj then tj must precede ti
-constraint forall (i in add, dep in dependencies[i])(if dep in mul then s[dep] + del_mul <= s[i] else s[dep] + del_add <= s[i] endif);
-constraint forall (i in mul, dep in dependencies[i])(if dep in mul then s[dep] + del_mul <= s[i] else s[dep] + del_add <= s[i] endif);
+constraint forall (i in 1..n, dep in dependencies[i])(s[i] + delay[i] <=
+s[dep]);
 
-clock_cycles = clock_cycles_add + clock_cycles_mul; % total clock cycles, might be useless
+
+clock_cycles = max([s[i] + delay[i] | i in last]); % total clock cycles, might be useless
 % all tasks must be completed in <= total clock cycles used
-constraint forall (i in sa)(i + del_add <= clock_cycles);
-constraint forall (i in sm)(i + del_mul <= clock_cycles);
-solve minimize clock_cycles;
+solve :: seq_search([
+    int_search(s, smallest_max, indomain_min, complete),
+    int_search(p, first_fail, indomain_min, complete)])
+    minimize clock_cycles;
 output["clock cycles = \(clock_cycles)\nschedule adds = \(sa)\nschedule muls = \(sm)\nschedule = \(s)\n"];% runtime = s seconds\n optimal = T/F"];
