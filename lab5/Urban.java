@@ -33,10 +33,14 @@ public class Urban {
 		}
 
 		IntVar[] sums = new IntVar[2*n];
-		// calculate row and col sums, rows are followed by cols
+		// calculate row sums
 		for(int i = 0; i < n; i++){
 			store.impose(new SumInt(lots[i], "sum row" + i, sums[i]));
-			store.impose(new SumInt(lots[i+n], "sum row" + (i+n), sums[i+n]));
+		}
+
+		// calculate col sums
+		for(int i = 0; i < n; i++){
+			store.impose(new SumInt(getCol(lots, i), "sum col" + (i+n), sums[i+n]));
 		}
 
 		// constraint points to contain the right point calculation for
@@ -48,12 +52,24 @@ public class Urban {
 
 		// total residential lots in all rows and cols MUST be
 		// n_residential, one constraint for rows, one for cols
-
+		IntVar n_res = new IntVar(store, n_residential, n_residential);
+		store.impose(new SumInt(sums, "n_res", n_res));
 
 		// symmetry breaking: rows and cols can be permuted to any other
 		// row/col. Note that a row cannot change place with a col etc.
 		// rows and cols can both be permuted
+
+
+		//solve minimize 
  	}
+
+	IntVar[] getCol(IntVar[][] matrix, int index){
+		IntVar[] col = new IntVar[matrix.length];
+		for(int row = 0; row < matrix.length; row++){ //only works for sqare matrix
+			col[row] = matrix[row][index];
+		}
+		return col;
+	}
 
 	public void ex_1(){
 		int n = 5;
