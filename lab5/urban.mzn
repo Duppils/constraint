@@ -1,6 +1,5 @@
 %%%%Urban Planning%%%%
 include "globals.mzn";
-
 int: n;
 int: n_commercial;
 int: n_residential;
@@ -17,8 +16,10 @@ constraint sum(lots_array) = n_residential;
 constraint forall(i in 1..n)(points[i] = point_distribution[sum([lots[i,j] | j in 1..n])]);
 constraint forall(i in 1..n)(points[i+n] = point_distribution[sum([lots[j,i] | j in 1..n])]);
 
-%constraint value_precede(points[i], points[j]
+% symmetry break: lex2 requires adjecent rows and columns to be lexicographically ordered
+constraint lex2(lots);
 
+% optimize for placements with highest point score
 var int: point_total = sum(points);
 solve :: int_search(lots_array, first_fail, indomain_min, complete) 
     maximize point_total;
